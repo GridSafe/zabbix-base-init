@@ -1,8 +1,0 @@
-- name: Apps System Init
-  hosts: lan
-  roles:
-    - common
-- name: zabbix base init
-  hosts: lan
-  roles:
-    - zabbix

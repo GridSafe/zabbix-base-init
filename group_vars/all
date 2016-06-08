@@ -1,6 +1,0 @@
----
-####
-#  所有程序包下载链接
-####
-DOWN_URL: -H "host:down.grid-safe.com" http://122.226.181.162
-DOWN_URL_BACKUP: -H "host:down.grid-safe.com" http://192.168.5.126
