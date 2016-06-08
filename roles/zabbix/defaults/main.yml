@@ -1,0 +1,30 @@
+---
+
+# 程序包
+PACKAGES:
+  - zabbix-server-mysql-3.0.0-1-x86_64.pkg.tar.xz
+  - openipmi-2.0.21-1-x86_64.pkg.tar.xz
+  - iksemel-1.5-1-x86_64.pkg.tar.xz
+
+PACKAGES_FOR_CENTOS:
+  - zabbix-agent-3.0.1-1.el7.x86_64.rpm
+
+# 脚本及相关文件
+SCRIPT_FILES:
+  - { src: 'test.flv', dest: 'test.flv' }
+  - { src: 'ceph-status.sh' , dest: 'ceph-status.sh' }
+  - { src: 'discover_cores.py' , dest: 'discover_cores.py' }
+  - { src: 'discover_cpus.py' , dest: 'discover_cpus.py' }
+  - { src: 'disk_discovery.py' , dest: 'disk_discovery.py' }
+  - { src: 'disk_discovery.sh' , dest: 'disk_discovery.sh' }
+  - { src: 'discover_net_interfaces.py' , dest: 'discover_net_interfaces.py' }
+  - { src: 'discover_net_interfaces.sh' , dest: 'discover_net_interfaces.sh' }
+  - { src: 'check_tcp_status.sh' , dest: 'check_tcp_status.sh' }
+  - { src: 'check_api_status.py' , dest: 'check_api_status.py' }
+
+# 相关配置文件
+CONF_FILES:
+  - { src: 'zabbix_rtmp.conf' , dest: 'zabbix_rtmp.conf' }
+  - { src: 'zabbix_ceph.conf' , dest: 'zabbix_ceph.conf' }
+  - { src: 'zabbix_sys.conf' , dest: 'zabbix_sys.conf' }
+  - { src: 'zabbix_api.conf' , dest: 'zabbix_api.conf' }

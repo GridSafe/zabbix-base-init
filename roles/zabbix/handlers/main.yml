@@ -1,0 +1,5 @@
+- name: 重启客户端服务
+  service: name=zabbix-agentd.service state=restarted
+
+- name: 重启客户端服务 For CentOS7
+  service: name=zabbix-agent.service state=restarted

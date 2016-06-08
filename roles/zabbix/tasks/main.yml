@@ -1,0 +1,82 @@
+- shell: which yum &>/dev/null && echo ok || echo no
+  register: YUM_COMMAND
+  tags:
+  - setup-script
+  - collect-conf-file
+
+- shell: which pacman &>/dev/null && echo ok || echo no
+  register: PACMAN_COMMAND
+  tags:
+  - setup-script
+  - collect-conf-file
+
+- name:	下载 zabbix 客户端程序包 for Archlinux
+  shell: pacman -Q zabbix-server-mysql || ( curl -L --connect-timeout 3 -o /tmp/{{ item }}  -H "host:down.grid-safe.com" http://122.226.181.162/{{ item }} || curl -L -o /tmp/{{ item }}  -H "host:down.grid-safe.com" http://192.168.5.126/{{ item }})
+  with_items: PACKAGES
+  when:
+  - '"ok" in PACMAN_COMMAND.stdout'
+
+- name:	下载 zabbix 客户端程序包 for CentOS7
+  shell: rpm -q zabbix-agent || (curl -L --connect-timeout 3 -o /tmp/{{ item }}  -H "host:down.grid-safe.com" http://122.226.181.162/{{ item }} || curl -L -o /tmp/{{ item }}  -H "host:down.grid-safe.com" http://192.168.5.126/{{ item }})
+  with_items: PACKAGES_FOR_CENTOS
+  when:
+  - '"ok" in YUM_COMMAND.stdout'
+
+- name: 安装 zabbix 客户端
+  shell: pacman -Q zabbix-server-mysql || pacman --force --noconfirm -U /tmp/{{ item }}
+  with_items: PACKAGES
+  when:
+  - '"ok" in PACMAN_COMMAND.stdout'
+
+- name: 安装 zabbix 客户端 for CentOS7
+  shell: rpm -q zabbix-agent &>/dev/null || yum install -y /tmp/{{ item }}
+  with_items: PACKAGES_FOR_CENTOS
+  when:
+  - '"ok" in YUM_COMMAND.stdout'
+
+- shell: ls /usr/lib/systemd/system/zabbix-agent.service &>/dev/null && mv /usr/lib/systemd/system/{zabbix-agent.service,zabbix-agentd.service} || true
+
+- shell: systemctl daemon-reload
+
+- shell: ls /etc/zabbix/zabbix_agentd.d &>/dev/null && mv /etc/zabbix/zabbix_agentd.d /etc/zabbix/zabbix_agentd.conf.d || true
+
+- name: 获取主机名
+  shell: hostname
+  register: HOSTNAMEINFO
+  tags: setup-conf-file
+
+- name: 复制主配置文件
+  template: src=zabbix_agentd.conf.j2 dest=/etc/zabbix/zabbix_agentd.conf mode=0644 
+  notify: 重启客户端服务
+  tags: setup-conf-file
+
+- name: 创建脚本目录
+  file: path=/opt/zabbix  state=directory owner=zabbix group=zabbix
+
+- name: 复制相关脚本和文件
+  copy: src={{ item.src }} dest=/opt/zabbix/{{ item.dest }}
+  with_items: SCRIPT_FILES
+  tags: setup-script
+
+- name: 添加自定义参数配置文件
+  copy: src={{ item.src }} dest=/etc/zabbix/zabbix_agentd.conf.d/{{ item.dest }} owner=zabbix group=zabbix
+  with_items: CONF_FILES
+  tags:
+  - setup-script
+  - collect-conf-file
+  notify: 重启客户端服务
+
+- shell: ls /usr/sbin/dmidecode &>/dev/null && echo "FOUND" || echo "NO_FOUND"
+  register: COMMAND_FOUND
+  tags: 
+  - setup-script
+  - collect-conf-file
+
+- name: 添加zabbix用户sudo权限文件
+  template: src=zabbix-agent.j2 dest=/etc/sudoers.d/zabbix-agent
+  tags: 
+  - setup-script
+  - collect-conf-file
+
+- name: 启动客户端程序
+  service: name=zabbix-agentd.service state=started enabled=yes
